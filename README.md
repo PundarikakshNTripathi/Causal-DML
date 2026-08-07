@@ -41,7 +41,20 @@ dvc pull
 *   **Phase 1 (Data Pipeline):** Complete. Implemented out-of-core DuckDB aggregation and Kaggle dataset ingestion. Dataset tracked securely via DVC.
 *   **Phase 2 (Causal Modeling):** Complete. Deployed DoWhy Structural Causal Model and EconML LinearDML CATE estimator. Model artifacts and hyperparameters tracked via MLflow and DVC.
 *   **Phase 3 (FastAPI Backend):** Complete. Deployed inference API loading the EconML model at startup.
-*   **Phase 4 (Streamlit Dashboard):** Pending.
+*   **Phase 4 (Streamlit Dashboard):** Complete. Developed a high-contrast enterprise Streamlit UI to visualize CATE metrics and render the Structural Causal Model DAG.
+
+## Enterprise Dashboard
+The Streamlit application acts as the primary interface for counterfactual simulation.
+
+**Key Features:**
+*   **Confounder Configuration Sidebar:** Parameterize the modeled user segment directly via precise numeric inputs.
+*   **Delta Metric Analysis:** Visualizes the isolated impact of the intervention against baseline churn probability.
+*   **Structural Causal Model Visualization:** Renders the theoretical network topology mapping pathways from confounders to treatment and outcome.
+
+Start the dashboard locally:
+```bash
+./scripts/run_dashboard.sh
+```
 
 ## API Documentation
 The FastAPI backend exposes a `POST` endpoint at `/predict_cate` for generating CATE predictions.
