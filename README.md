@@ -40,8 +40,29 @@ dvc pull
 ## Pipeline Status
 *   **Phase 1 (Data Pipeline):** Complete. Implemented out-of-core DuckDB aggregation and Kaggle dataset ingestion. Dataset tracked securely via DVC.
 *   **Phase 2 (Causal Modeling):** Complete. Deployed DoWhy Structural Causal Model and EconML LinearDML CATE estimator. Model artifacts and hyperparameters tracked via MLflow and DVC.
-*   **Phase 3 (FastAPI Backend):** Pending.
+*   **Phase 3 (FastAPI Backend):** Complete. Deployed inference API loading the EconML model at startup.
 *   **Phase 4 (Streamlit Dashboard):** Pending.
+
+## API Documentation
+The FastAPI backend exposes a `POST` endpoint at `/predict_cate` for generating CATE predictions.
+
+**Request Schema:**
+```json
+{
+  "total_active_days": 0.0,
+  "var_daily_listening_time": 0.0,
+  "total_listening_time": 0.0,
+  "avg_num_100": 0.0
+}
+```
+
+**Response Schema:**
+```json
+{
+  "cate": -0.0017,
+  "message": "Successfully predicted Conditional Average Treatment Effect."
+}
+```
 
 ## License
 MIT License.
