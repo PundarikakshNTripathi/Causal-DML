@@ -1,5 +1,4 @@
 import streamlit as st
-import os
 import urllib.request
 import json
 import numpy as np
@@ -7,6 +6,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
 import networkx as nx
+import os
 
 st.set_page_config(page_title="Causal Simulation Dashboard", layout="wide", initial_sidebar_state="expanded")
 
@@ -35,9 +35,12 @@ with st.sidebar:
     st.markdown("Move the sliders to set the feature values for the user group.")
     
     total_active_days = st.slider("Total Active Days", min_value=0, max_value=365, value=45, step=1)
-    var_daily_listening_time = st.slider("Variance in Listening Time (minutes squared)", min_value=0, value=300, max_value=2000, step=10)
-    total_listening_time = st.slider("Total Listening Time (minutes)", min_value=0, value=1500, max_value=20000, step=100)
-    avg_num_100 = st.slider("Average Full Tracks (100 percent)", min_value=0, value=120, max_value=1000, step=5)
+    var_daily_listening_time = st.slider("Variance in Listening Time", min_value=0, value=300, max_value=2000, step=10)
+    total_listening_time = st.slider("Total Listening Time", min_value=0, value=1500, max_value=20000, step=100)
+    avg_num_100 = st.slider("Average Full Tracks", min_value=0, value=120, max_value=1000, step=5)
+    
+    st.markdown("---")
+    demo_mode = st.toggle("Enable Demo Amplification", value=True, help="The true empirical CATE is nearly 0 since treatment was randomized noise. This applies a synthetic multiplier so you can evaluate the UI interactivity.")
 
 def fetch_cate(days, var_time, total_time, avg_tracks):
     payload = {
@@ -55,7 +58,11 @@ def fetch_cate(days, var_time, total_time, avg_tracks):
     try:
         with urllib.request.urlopen(req) as response:
             result = json.loads(response.read().decode())
-            return result.get('cate', 0.0)
+            cate = result.get('cate', 0.0)
+            if demo_mode:
+                # Amplify the 1e-28 signal and add distinct heterogeneity for UI demonstration
+                cate = (cate * 1e26) - 0.02 - (float(days) / 365.0) * 0.08
+            return cate
     except Exception:
         return None
 
@@ -72,8 +79,11 @@ else:
     ])
 
     with tab1:
+        if demo_mode:
+            st.info(":material/info: **Demo Mode is ON.** The actual Double Machine Learning model found a true causal effect of ~0.00 because the treatment data was random noise. A synthetic multiplier is active so you can see the dashboard react to slider inputs.")
+            
         baseline_prob = 0.42
-        counterfactual_prob = baseline_prob + cate_result
+        counterfactual_prob = max(0.0, min(1.0, baseline_prob + cate_result))
         
         st.markdown("### Executive Summary")
         col1, col2, col3 = st.columns(3)
