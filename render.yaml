@@ -14,4 +14,4 @@ services:
     region: ohio
     envVars:
       - key: API_URL
-        value: https://causal-dml-api.onrender.com/predict_cate
+        value: https://causal-dml-dashboard.onrender.com/predict_cate
