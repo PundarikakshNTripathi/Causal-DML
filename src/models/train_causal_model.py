@@ -94,11 +94,19 @@ def main():
             logger.info("Generating metrics and visualizations for README...")
             import matplotlib.pyplot as plt
             import re
+            from sklearn.metrics import roc_auc_score, r2_score
+            from sklearn.model_selection import train_test_split
             
-            # Generate feature importance plot
-            rf_imp = RandomForestRegressor(n_estimators=50, max_depth=5, random_state=42)
-            rf_imp.fit(X, Y)
-            importances = rf_imp.feature_importances_
+            X_train, X_test, Y_train, Y_test, T_train, T_test = train_test_split(X, Y, T, test_size=0.2, random_state=42)
+            
+            rf_y = RandomForestRegressor(n_estimators=50, max_depth=5, random_state=42)
+            rf_y.fit(X_train, Y_train)
+            r2_y = r2_score(Y_test, rf_y.predict(X_test))
+            
+            rf_t = RandomForestClassifier(n_estimators=50, max_depth=5, random_state=42)
+            rf_t.fit(X_train, T_train)
+            auc_t = roc_auc_score(T_test, rf_t.predict_proba(X_test)[:, 1])
+            importances = rf_y.feature_importances_
 
             fig, ax = plt.subplots(figsize=(8, 4))
             ax.barh(confounders, importances, color="#005a9e")
@@ -109,6 +117,18 @@ def main():
             plt.savefig(vis_path)
             plt.close()
             
+            # CATE Distribution
+            cates = est.effect(X)
+            fig2, ax2 = plt.subplots(figsize=(8, 4))
+            ax2.hist(cates, bins=50, color="#d13438", alpha=0.7)
+            ax2.set_xlabel("Conditional Average Treatment Effect (CATE)")
+            ax2.set_ylabel("Frequency")
+            ax2.set_title("Distribution of Individualized Treatment Effects")
+            plt.tight_layout()
+            cate_vis_path = "docs/assets/cate_distribution.png"
+            plt.savefig(cate_vis_path)
+            plt.close()
+            
             metrics_md = f"""
 <!-- METRICS_START -->
 ### Model Evaluation Metrics
@@ -116,15 +136,19 @@ def main():
 |--------|-------|
 | **Average Treatment Effect (ATE)** | `{ate:.4e}` |
 | **Final Stage Orthogonal Loss (MSE)** | `{est.score(Y, T, X):.4f}` |
+| **Outcome Model (Y) $R^2$** | `{r2_y:.4f}` |
+| **Propensity Model (T) AUC** | `{auc_t:.4f}` |
 | **Training Sample Size** | `{len(df):,}` |
 | **First Stage Outcome Model** | `RandomForestRegressor (n=50)` |
 | **First Stage Propensity Model** | `RandomForestClassifier (n=50)` |
 | **Confounding Variables** | `{', '.join(confounders)}` |
 
-### First Stage Diagnostics
-<p align="center">
-  <img src="./docs/assets/feature_importance.png" alt="Feature Importance (Outcome Model)" width="800">
-</p>
+### Visual Diagnostics
+
+<div align="center">
+  <img src="./docs/assets/feature_importance.png" alt="Feature Importance" width="48%">
+  <img src="./docs/assets/cate_distribution.png" alt="CATE Distribution" width="48%">
+</div>
 <!-- METRICS_END -->"""
             
             try:

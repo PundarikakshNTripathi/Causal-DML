@@ -40,66 +40,78 @@ This system operates as a counterfactual simulator. It leverages the mathematica
 ## Causal Inference Framework & Methodology
 
 ### The Fundamental Problem of Causal Inference
-In observational data environments, the treatment $T$ (e.g., receiving a discount) is not randomly assigned; it is heavily correlated with confounding covariates $X$ (e.g., historical user activity). Consequently, standard regression models suffer from **Omitted Variable Bias** (Confounding). We wish to estimate the treatment effect $\theta_0$ in the Partially Linear Model:
+In observational data environments, the treatment (e.g., receiving a discount) is not randomly assigned; it is heavily correlated with confounding covariates (e.g., historical user activity). Consequently, standard regression models suffer from **Omitted Variable Bias** (Confounding). We wish to estimate the treatment effect in the Partially Linear Model:
 
-$$ Y = T \theta_0 + g_0(X) + \epsilon $$
+$$
+Y = T \theta_0 + g_0(X) + \epsilon
+$$
 
-where $Y$ is the target outcome (churn), $T$ is the treatment assignment, and $X$ denotes the vector of confounders.
+where `Y` is the target outcome (churn), `T` is the treatment assignment, and `X` denotes the vector of confounders.
 
 ### Double Machine Learning (DML) Formulation
-To solve the confounding problem without making strict parametric assumptions regarding the functional form of $g_0(X)$, this system utilizes **Chernozhukov's Double Machine Learning (DML)** methodology.
+To solve the confounding problem without making strict parametric assumptions regarding the functional form of the confounders, this system utilizes **Chernozhukov's Double Machine Learning (DML)** methodology.
 
 1. **First Stage (Nuisance Parameter Estimation):** 
    Through sample-splitting (cross-fitting), we train highly-parameterized machine learning estimators to predict the outcome and the treatment based entirely on the confounders:
-   - Outcome Model (Expected Outcome): $E[Y|X]$
-   - Propensity Model (Expected Treatment): $E[T|X]$
+   - Outcome Model (Expected Outcome)
+   - Propensity Model (Expected Treatment)
    
    In our architecture, these nuisance models are backed by `RandomForestRegressor` and `RandomForestClassifier` ensembles.
 
 2. **Orthogonalization (Residualization):**
-   By computing the residuals, we explicitly remove the confounding variance explained by $X$:
-   $$ \tilde{Y} = Y - E[Y|X] $$
-   $$ \tilde{T} = T - E[T|X] $$
+   By computing the residuals, we explicitly remove the confounding variance explained by the features:
+   
+$$
+\tilde{Y} = Y - E[Y|X]
+$$
+   
+$$
+\tilde{T} = T - E[T|X]
+$$
 
 3. **Second Stage (Effect Estimation):**
-   We perform an ordinary least squares regression of the outcome residuals $\tilde{Y}$ on the treatment residuals $\tilde{T}$. Thanks to the **Neyman Orthogonality Condition**, this isolates the true, unbiased causal effect:
-   $$ \tilde{Y} = \theta_0 \tilde{T} + \nu $$
+   We perform an ordinary least squares regression of the outcome residuals on the treatment residuals. Thanks to the **Neyman Orthogonality Condition**, this isolates the true, unbiased causal effect:
+   
+$$
+\tilde{Y} = \theta_0 \tilde{T} + \nu
+$$
 
-For individualized heterogeneous effects (CATE), the parameter expands to $\theta(X)$, where the treatment effect varies deterministically based on the user's specific feature vector.
+For individualized heterogeneous effects (CATE), the parameter expands, where the treatment effect varies deterministically based on the user's specific feature vector.
 
 ## System Architecture
 
 ```mermaid
-flowchart LR
+flowchart TD
     %% Data Pipeline
     subgraph Data_Engineering [Phase 1: ETL Pipeline]
-        K[Kaggle API] -->|Raw 7z/CSV| D[(DuckDB)]
-        D -->|Feature Aggregation| P([features.parquet])
-        P -.->|DVC Tracked| S3[(Local DVC Cache)]
+        direction LR
+        K[Kaggle API] --> D[(DuckDB)]
+        D --> P([features.parquet])
     end
 
     %% Causal Modeling
     subgraph Causal_Modeling [Phase 2: Modeling]
-        P --> CM[DoWhy SCM]
-        CM --> Econ[EconML LinearDML]
-        Econ -->|First Stage RFs| Ortho[Orthogonalization]
-        Ortho -->|Serialization| PKL([causal_model.pkl])
-        Ortho -.->|Log Metrics| MLF[(MLflow)]
+        direction LR
+        CM[DoWhy SCM] --> Econ[EconML LinearDML]
+        Econ --> Ortho[Orthogonalization]
+        Ortho --> PKL([causal_model.pkl])
     end
 
     %% Deployment
     subgraph Microservices [Phase 3 & 4: Deployment]
-        PKL --> API{FastAPI Engine}
-        API <-->|REST POST| UI[Streamlit UI]
-        UI --> User((End User))
+        direction LR
+        API{FastAPI Engine} <--> UI[Streamlit UI]
     end
+    
+    P --> CM
+    PKL --> API
 
     %% Styling
     classDef database fill:#f2f0ff,stroke:#6b21a8,stroke-width:2px;
     classDef process fill:#e0f2fe,stroke:#0369a1,stroke-width:2px;
     classDef artifact fill:#fef9c3,stroke:#a16207,stroke-width:2px;
     
-    class D,S3,MLF database;
+    class D,MLF database;
     class K,CM,Econ,Ortho,API,UI process;
     class P,PKL artifact;
 ```
@@ -140,13 +152,13 @@ Causal-DML/
 ```
 
 ## Technology Stack & Infrastructure
-*   `uv` 
-*   `duckdb`, `pyarrow`, `pandas`
-*   `dowhy`, `econml`
-*   `mlflow`
-*   `fastapi`, `uvicorn`, `pydantic`
-*   `streamlit`, `plotly`, `networkx`, `matplotlib`
-*   `docker`, `docker-compose`
+*   **Package Manager:** `uv`
+*   **Data Processing:** `duckdb`, `pyarrow`, `pandas`
+*   **Causal Inference:** `dowhy`, `econml`
+*   **Experiment Tracking:** `mlflow`
+*   **API Backend:** `fastapi`, `uvicorn`, `pydantic`
+*   **Frontend UI:** `streamlit`, `plotly`, `networkx`, `matplotlib`
+*   **Containerization:** `docker`, `docker-compose`
 
 ## Setup, Execution & Testing
 **1. Local Environment Initialization**
@@ -178,15 +190,19 @@ docker-compose up -d --build
 |--------|-------|
 | **Average Treatment Effect (ATE)** | `-1.7421e-03` |
 | **Final Stage Orthogonal Loss (MSE)** | `0.0601` |
+| **Outcome Model (Y) $R^2$** | `0.0056` |
+| **Propensity Model (T) AUC** | `0.5145` |
 | **Training Sample Size** | `100,000` |
 | **First Stage Outcome Model** | `RandomForestRegressor (n=50)` |
 | **First Stage Propensity Model** | `RandomForestClassifier (n=50)` |
 | **Confounding Variables** | `total_active_days, var_daily_listening_time, total_listening_time, avg_num_100` |
 
-### First Stage Diagnostics
-<p align="center">
-  <img src="./docs/assets/feature_importance.png" alt="Feature Importance (Outcome Model)" width="800">
-</p>
+### Visual Diagnostics
+
+<div align="center">
+  <img src="./docs/assets/feature_importance.png" alt="Feature Importance" width="48%">
+  <img src="./docs/assets/cate_distribution.png" alt="CATE Distribution" width="48%">
+</div>
 <!-- METRICS_END -->
 
 ## Current Status & Limitations
