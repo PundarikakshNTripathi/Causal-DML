@@ -90,6 +90,57 @@ def main():
             joblib.dump(est, model_path)
             mlflow.log_artifact(model_path)
             
+            # --- Dynamic README Update ---
+            logger.info("Generating metrics and visualizations for README...")
+            import matplotlib.pyplot as plt
+            import re
+            
+            # Generate feature importance plot
+            rf_imp = RandomForestRegressor(n_estimators=50, max_depth=5, random_state=42)
+            rf_imp.fit(X, Y)
+            importances = rf_imp.feature_importances_
+
+            fig, ax = plt.subplots(figsize=(8, 4))
+            ax.barh(confounders, importances, color="#005a9e")
+            ax.set_xlabel("Importance")
+            ax.set_title("First Stage Confounder Importance (Outcome Model)")
+            plt.tight_layout()
+            vis_path = "docs/assets/feature_importance.png"
+            plt.savefig(vis_path)
+            plt.close()
+            
+            metrics_md = f"""
+<!-- METRICS_START -->
+### Model Evaluation Metrics
+| Metric | Value |
+|--------|-------|
+| Average Treatment Effect (ATE) | `{ate:.4e}` |
+| Number of Samples (N) | `{len(df):,}` |
+| Confounders | `{', '.join(confounders)}` |
+| Y-Model Type | `RandomForestRegressor (n_estimators=50)` |
+| T-Model Type | `RandomForestClassifier (n_estimators=50)` |
+
+### Visualizations
+![Feature Importance](docs/assets/feature_importance.png)
+<!-- METRICS_END -->"""
+            
+            try:
+                with open("README.md", "r", encoding="utf-8") as f:
+                    readme_content = f.read()
+                
+                new_readme = re.sub(
+                    r"<!-- METRICS_START -->.*?<!-- METRICS_END -->",
+                    metrics_md.strip(),
+                    readme_content,
+                    flags=re.DOTALL
+                )
+                
+                with open("README.md", "w", encoding="utf-8") as f:
+                    f.write(new_readme)
+                logger.info("Successfully updated README.md with dynamic metrics.")
+            except Exception as e:
+                logger.error(f"Failed to update README.md: {e}")
+            
         logger.info("Training complete.")
         
     except Exception as e:
