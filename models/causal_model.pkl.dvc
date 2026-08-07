@@ -1,5 +1,0 @@
-outs:
-- md5: f3f424c71ac45257bd15228669a02766
-  size: 1278037
-  hash: md5
-  path: causal_model.pkl
