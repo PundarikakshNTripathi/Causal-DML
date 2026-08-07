@@ -23,55 +23,32 @@ def main():
         import subprocess
         import pandas as pd
         
-        try:
-            # Downloading 'kkbox-churn-prediction-challenge' dataset to data/raw/
-            api.competition_download_files('kkbox-churn-prediction-challenge', path='data/raw')
-            
-            # Extract any zip files downloaded
-            zip_files = glob.glob('data/raw/*.zip')
-            for zip_file in zip_files:
-                logger.info(f"Unzipping {zip_file}...")
-                with zipfile.ZipFile(zip_file, 'r') as zip_ref:
-                    zip_ref.extractall('data/raw')
-                    
-            # Extract any 7z files (Kaggle often uses 7z for kkbox)
-            seven_z_files = glob.glob('data/raw/*.7z')
-            if seven_z_files:
-                logger.info("Found .7z files, checking py7zr dependency...")
-                try:
-                    import py7zr
-                except ImportError:
-                    logger.info("Installing py7zr to handle .7z extraction...")
-                    subprocess.run(["uv", "add", "py7zr"], check=True)
+        # Downloading 'kkbox-churn-prediction-challenge' dataset to data/raw/
+        logger.info("Starting download...")
+        api.competition_download_files('kkbox-churn-prediction-challenge', path='data/raw')
+        
+        # Extract any zip files downloaded
+        zip_files = glob.glob('data/raw/*.zip')
+        for zip_file in zip_files:
+            logger.info(f"Unzipping {zip_file}...")
+            with zipfile.ZipFile(zip_file, 'r') as zip_ref:
+                zip_ref.extractall('data/raw')
                 
-                for sz_file in seven_z_files:
-                    logger.info(f"Extracting {sz_file}...")
-                    subprocess.run(["uv", "run", "python", "-c", f"import py7zr; z = py7zr.SevenZipFile(r'{sz_file}', mode='r'); z.extractall(path='data/raw')"], check=True)
-                    
-            logger.info("Dataset download and extraction complete.")
-        except Exception as e:
-            logger.warning(f"Failed to download dataset from Kaggle: {e}")
-            logger.warning("Generating a synthetic dataset to proceed with the pipeline (likely 403 Forbidden for unaccepted rules).")
+        # Extract any 7z files (Kaggle often uses 7z for kkbox)
+        seven_z_files = glob.glob('data/raw/*.7z')
+        if seven_z_files:
+            logger.info("Found .7z files, checking py7zr dependency...")
+            try:
+                import py7zr
+            except ImportError:
+                logger.info("Installing py7zr to handle .7z extraction...")
+                subprocess.run(["uv", "add", "py7zr"], check=True)
             
-            np.random.seed(42)
-            dates = pd.date_range(start='2017-01-01', periods=30).strftime('%Y%m%d').tolist()
-            msnos = [f'user_{i}' for i in range(1000)]
-            
-            synth_data = []
-            for _ in range(5000):
-                synth_data.append({
-                    'msno': np.random.choice(msnos),
-                    'date': np.random.choice(dates),
-                    'num_25': np.random.randint(0, 5),
-                    'num_50': np.random.randint(0, 5),
-                    'num_75': np.random.randint(0, 3),
-                    'num_985': np.random.randint(0, 3),
-                    'num_100': np.random.randint(0, 20),
-                    'num_unq': np.random.randint(1, 15),
-                    'total_secs': np.random.uniform(10.0, 5000.0)
-                })
-            pd.DataFrame(synth_data).to_csv('data/raw/user_logs.csv', index=False)
-            logger.info("Synthetic dataset generated at data/raw/user_logs.csv")
+            for sz_file in seven_z_files:
+                logger.info(f"Extracting {sz_file}...")
+                subprocess.run(["uv", "run", "python", "-c", f"import py7zr; z = py7zr.SevenZipFile(r'{sz_file}', mode='r'); z.extractall(path='data/raw')"], check=True)
+                
+        logger.info("Dataset download and extraction complete.")
         
         # c. Read raw CSV files efficiently and perform SQL aggregations using DuckDB
         logger.info("Connecting to DuckDB and aggregating raw data...")
