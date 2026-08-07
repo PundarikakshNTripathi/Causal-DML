@@ -1,0 +1,10 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+COPY pyproject.toml .
+RUN pip install uv && uv pip install --system -r pyproject.toml
+COPY src/ /app/src/
+COPY .streamlit/ /app/.streamlit/
+
+EXPOSE 8501
+CMD ["streamlit", "run", "src/app/dashboard.py", "--server.port", "8501", "--server.address", "0.0.0.0"]
