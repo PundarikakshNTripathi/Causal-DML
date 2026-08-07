@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: causal-dml-api
+    env: docker
+    dockerfilePath: ./Dockerfile.api
+    plan: free
+    region: ohio
+
+  - type: web
+    name: causal-dml-dashboard
+    env: docker
+    dockerfilePath: ./Dockerfile.frontend
+    plan: free
+    region: ohio
+    envVars:
+      - key: API_URL
+        value: https://causal-dml-api.onrender.com/predict_cate
