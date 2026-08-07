@@ -37,11 +37,11 @@ dvc pull
 ./scripts/run_dashboard.sh
 ```
 
-## Documentation
-Engineering specifications and agent execution harnesses are located in `docs/`:
-*   [PRD & TRD](docs/PRD_TRD.md)
-*   [Agent Harness Rules](docs/AGENTS.md)
-*   [Execution Prompts](docs/PROMPTS.md)
+## Pipeline Status
+*   **Phase 1 (Data Pipeline):** Complete. Implemented out-of-core DuckDB aggregation and Kaggle dataset ingestion. Dataset tracked securely via DVC.
+*   **Phase 2 (Causal Modeling):** Pending.
+*   **Phase 3 (FastAPI Backend):** Pending.
+*   **Phase 4 (Streamlit Dashboard):** Pending.
 
 ## License
 MIT License.
