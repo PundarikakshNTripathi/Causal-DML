@@ -142,6 +142,8 @@ def main():
 | **First Stage Outcome Model** | `RandomForestRegressor (n=50)` |
 | **First Stage Propensity Model** | `RandomForestClassifier (n=50)` |
 | **Confounding Variables** | `{', '.join(confounders)}` |
+| **Value-Based Metric** | `Expected LTV Impact (-CATE * Base LTV)` |
+| **Generative AI Integration** | `LLM-driven Intervention Strategy` |
 
 ### Visual Diagnostics
 

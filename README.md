@@ -107,9 +107,9 @@ flowchart TD
     PKL --> API
 
     %% Styling
-    classDef database fill:#f2f0ff,stroke:#6b21a8,stroke-width:2px;
-    classDef process fill:#e0f2fe,stroke:#0369a1,stroke-width:2px;
-    classDef artifact fill:#fef9c3,stroke:#a16207,stroke-width:2px;
+    classDef database fill:#f2f0ff,stroke:#6b21a8,stroke-width:2px,color:#000000;
+    classDef process fill:#e0f2fe,stroke:#0369a1,stroke-width:2px,color:#000000;
+    classDef artifact fill:#fef9c3,stroke:#a16207,stroke-width:2px,color:#000000;
     
     class D,MLF database;
     class K,CM,Econ,Ortho,API,UI process;
@@ -196,6 +196,8 @@ docker-compose up -d --build
 | **First Stage Outcome Model** | `RandomForestRegressor (n=50)` |
 | **First Stage Propensity Model** | `RandomForestClassifier (n=50)` |
 | **Confounding Variables** | `total_active_days, var_daily_listening_time, total_listening_time, avg_num_100` |
+| **Value-Based Metric** | `Expected LTV Impact (-CATE * Base LTV)` |
+| **Generative AI Integration** | `LLM-driven Intervention Strategy` |
 
 ### Visual Diagnostics
 
