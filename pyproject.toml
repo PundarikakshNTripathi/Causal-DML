@@ -1,0 +1,20 @@
+[project]
+name = "causal-dml"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "dowhy>=0.14",
+    "duckdb>=1.5.5",
+    "dvc>=3.67.1",
+    "dvc-s3>=3.3.0",
+    "econml>=0.17.0",
+    "fastapi>=0.141.1",
+    "kaggle>=2.2.4",
+    "mlflow>=3.15.1",
+    "pandas>=2.3.3",
+    "pyarrow>=25.0.0",
+    "streamlit>=1.59.1",
+    "uvicorn>=0.52.1",
+]
