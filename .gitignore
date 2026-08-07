@@ -1,4 +1,4 @@
-docs/
+docs/debugging/
 mlruns/
 mlflow.db
 __pycache__/

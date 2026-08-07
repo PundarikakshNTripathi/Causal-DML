@@ -114,14 +114,17 @@ def main():
 ### Model Evaluation Metrics
 | Metric | Value |
 |--------|-------|
-| Average Treatment Effect (ATE) | `{ate:.4e}` |
-| Number of Samples (N) | `{len(df):,}` |
-| Confounders | `{', '.join(confounders)}` |
-| Y-Model Type | `RandomForestRegressor (n_estimators=50)` |
-| T-Model Type | `RandomForestClassifier (n_estimators=50)` |
+| **Average Treatment Effect (ATE)** | `{ate:.4e}` |
+| **Final Stage Orthogonal Loss (MSE)** | `{est.score(Y, T, X):.4f}` |
+| **Training Sample Size** | `{len(df):,}` |
+| **First Stage Outcome Model** | `RandomForestRegressor (n=50)` |
+| **First Stage Propensity Model** | `RandomForestClassifier (n=50)` |
+| **Confounding Variables** | `{', '.join(confounders)}` |
 
-### Visualizations
-![Feature Importance](docs/assets/feature_importance.png)
+### First Stage Diagnostics
+<p align="center">
+  <img src="./docs/assets/feature_importance.png" alt="Feature Importance (Outcome Model)" width="800">
+</p>
 <!-- METRICS_END -->"""
             
             try:
