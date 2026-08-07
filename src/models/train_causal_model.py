@@ -90,7 +90,7 @@ def main():
             joblib.dump(est, model_path)
             mlflow.log_artifact(model_path)
             
-            # --- Dynamic README Update ---
+            # Update README with dynamically generated metrics and visualizations.
             logger.info("Generating metrics and visualizations for README...")
             import matplotlib.pyplot as plt
             import re

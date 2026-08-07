@@ -27,7 +27,7 @@ An enterprise-grade counterfactual simulation dashboard and REST API leveraging 
 ## Introduction
 In the music streaming domain, customer retention is paramount. When dealing with massive datasets, standard predictive machine learning models can accurately forecast *who* will churn, but they catastrophically fail at answering *what we should do about it*. If we offer a discount to a highly active user, will it actually prevent them from churning, or are we just cannibalizing revenue from someone who was going to stay anyway?
 
-The **Causal-DML** project is designed to transition from mere *prediction* to *prescription*. By synthesizing advanced econometric techniques (Double Machine Learning) with a scalable data engineering pipeline (DuckDB) and a dynamic frontend (Streamlit), this system calculates the **Conditional Average Treatment Effect (CATE)**—the specific impact of an intervention on an individualized basis.
+The **Causal-DML** project is designed to transition from mere *prediction* to *prescription*. By synthesizing advanced econometric techniques (Double Machine Learning) with a scalable data engineering pipeline (DuckDB) and a dynamic frontend (Streamlit), this system calculates the **Conditional Average Treatment Effect (CATE)**, which is the specific impact of an intervention on an individualized basis.
 
 ## Executive Summary
 Imagine managing a subscription service where you observe a subset of users exhibiting a high probability of churn. To retain them, a discount intervention is proposed.
@@ -128,10 +128,10 @@ Causal-DML/
 │   └── config.toml        # UI theme enforcement (Dark Mode)
 ├── data/
 │   ├── raw/               # Kaggle compressed artifacts (gitignored)
-│   └── processed/         # Aggregated features.parquet (DVC tracked)
+│   └── processed/         # Aggregated features.parquet (DVC tracked data)
 ├── docs/                  
 │   └── assets/            # Dynamically generated evaluation graphs
-├── models/                # Serialized model artifacts (causal_model.pkl)
+├── models/                # Serialized model artifacts (natively tracked via Git)
 ├── scripts/               # Bash execution utilities
 ├── src/                   
 │   ├── api/               
@@ -148,7 +148,7 @@ Causal-DML/
 ├── Dockerfile.api         
 ├── Dockerfile.frontend    
 ├── pyproject.toml         # UV dependency specifications
-└── render.yaml            # Render.com 1-Click Deployment Blueprint
+└── render.yaml            # Unified Render deployment blueprint for both microservices
 ```
 
 ## Technology Stack & Infrastructure
@@ -178,6 +178,7 @@ uv run python src/models/train_causal_model.py
 ```
 
 **4. Containerized Microservice Deployment (Production)**
+Alternatively, the entire stack (FastAPI backend and Streamlit frontend) can be deployed natively using the provided `render.yaml` blueprint.
 ```bash
 docker-compose up -d --build
 ```
@@ -208,7 +209,7 @@ docker-compose up -d --build
 <!-- METRICS_END -->
 
 ## Current Status & Limitations
-*   **Infrastructure Status:** The data pipeline, causal model training, FastAPI inference engine, and Streamlit dashboard are fully implemented, containerized, and deployed.
+*   **Infrastructure Status:** The data pipeline, causal model training, FastAPI inference engine, and Streamlit dashboard are fully implemented, containerized, and deployed simultaneously on Render via a unified blueprint.
 *   **Data Generation Limitation:** Because the raw KKBox dataset lacks a historical `received_discount` treatment variable, the treatment assignment in this implementation was generated as synthetic noise. Consequently, the true causal effect is mathematically zero. The dashboard utilizes a "Demo Amplification" mode to scale the residual noise purely to visually demonstrate the system's dynamic reactivity capabilities.
 
 ## Future Additions

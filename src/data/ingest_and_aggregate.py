@@ -13,7 +13,7 @@ def main():
         os.makedirs('data/raw', exist_ok=True)
         os.makedirs('data/processed', exist_ok=True)
         
-        # a. Download dataset using Kaggle API
+        # Download the WSDM churn dataset using the Kaggle API.
         logger.info("Initializing Kaggle API and downloading dataset...")
         api = KaggleApi()
         api.authenticate()
@@ -50,11 +50,11 @@ def main():
                 
         logger.info("Dataset download and extraction complete.")
         
-        # c. Read raw CSV files efficiently and perform SQL aggregations using DuckDB
+        # Process raw CSV logs in-memory and perform analytical aggregations via DuckDB.
         logger.info("Connecting to DuckDB and aggregating raw data...")
         con = duckdb.connect(database=':memory:')
         
-        # We aggregate user-level temporal features (e.g., total active days, variance in daily listening time)
+        # Aggregate user-level temporal metrics (e.g., active frequency and listening variance).
         query = """
         SELECT 
             ul.msno,
@@ -68,13 +68,12 @@ def main():
         aggregated_df = con.execute(query).df()
         logger.info(f"DuckDB aggregation complete. Shape: {aggregated_df.shape}")
         
-        # d. Synthesize a treatment variable `received_discount` (binary) that is statistically correlated 
-        # with specific confounders and the churn outcome to ensure a valid causal graph.
+        # Synthesize a binary treatment variable (received_discount). 
+        # We correlate this with historical listening time to simulate observational confounding.
         logger.info("Synthesizing treatment variable `received_discount`...")
         np.random.seed(42)
         
-        # For our SCM, assume higher total listening time increases the chance of receiving a discount (confounder)
-        # We normalize the total_listening_time and use a sigmoid function to assign treatment probabilities
+        # Normalize listening time and map to treatment probability via a sigmoid distribution.
         norm_time = (aggregated_df['total_listening_time'] - aggregated_df['total_listening_time'].mean()) / aggregated_df['total_listening_time'].std()
         
         # Using sigmoid to convert normalized times to probability
@@ -84,7 +83,7 @@ def main():
         aggregated_df['received_discount'] = np.random.binomial(1, prob_discount)
         logger.info("Treatment variable `received_discount` successfully synthesized.")
         
-        # e. Save the final aggregated dataframe as data/processed/features.parquet
+        # Serialize the aggregated feature set for causal modeling.
         output_path = 'data/processed/features.parquet'
         logger.info(f"Saving final aggregated features to {output_path}...")
         

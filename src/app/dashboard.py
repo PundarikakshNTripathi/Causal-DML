@@ -10,7 +10,7 @@ import os
 
 st.set_page_config(page_title="Causal Simulation Dashboard", layout="wide", initial_sidebar_state="expanded")
 
-# Clean, theme-agnostic structural CSS
+# Define core structural CSS to override default Streamlit padding.
 st.markdown("""
 <style>
     div[data-testid="metric-container"] {
@@ -26,12 +26,12 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-st.title(":material/science: Counterfactual Simulation Dashboard")
-st.markdown("This dashboard calculates the effect of retention actions. It uses Double Machine Learning to find the causal impact.")
+st.title("Counterfactual Simulation Dashboard")
+st.markdown("This dashboard calculates the effect of retention actions. It uses Double Machine Learning to isolate the causal impact.")
 
-# --- Sidebar ---
+# Define sidebar components for interactive user feature configuration.
 with st.sidebar:
-    st.markdown("### :material/tune: User Profile Configuration")
+    st.markdown("### User Profile Configuration")
     st.markdown("Move the sliders to set the feature values for the user group.")
     
     total_active_days = st.slider("Total Active Days", min_value=0, max_value=365, value=45, step=1)
@@ -60,27 +60,27 @@ def fetch_cate(days, var_time, total_time, avg_tracks):
             result = json.loads(response.read().decode())
             cate = result.get('cate', 0.0)
             if demo_mode:
-                # Amplify the 1e-28 signal and add distinct heterogeneity for UI demonstration
+                # Amplify the minute CATE signal and introduce deterministic heterogeneity for UI demonstration purposes.
                 cate = (cate * 1e26) - 0.02 - (float(days) / 365.0) * 0.08
             return cate
     except Exception:
         return None
 
-# Auto-calculate when sidebar values change
+# Request inference from the FastAPI backend based on current UI state.
 cate_result = fetch_cate(total_active_days, var_daily_listening_time, total_listening_time, avg_num_100)
 
 if cate_result is None:
     st.error("Cannot connect to the inference server. Make sure the API is running.")
 else:
     tab1, tab2, tab3 = st.tabs([
-        ":material/analytics: Simulation Analysis", 
-        ":material/speed: Model Diagnostics", 
-        ":material/account_tree: Causal Architecture"
+        "Simulation Analysis", 
+        "Model Diagnostics", 
+        "Causal Architecture"
     ])
 
     with tab1:
         if demo_mode:
-            st.info(":material/info: **Demo Mode is ON.** The actual Double Machine Learning model found a true causal effect of ~0.00 because the treatment data was random noise. A synthetic multiplier is active so you can see the dashboard react to slider inputs.")
+            st.info("**Demo Mode is ON.** The actual Double Machine Learning model identified a true causal effect approximating zero because the training treatment assignment was randomly distributed noise. A synthetic scalar is active here to demonstrate the interactive capabilities of the dashboard.")
             
         baseline_prob = 0.42
         counterfactual_prob = max(0.0, min(1.0, baseline_prob + cate_result))
@@ -97,7 +97,7 @@ else:
             ltv_impact = -cate_result * 120.0  # Assumed $120 Base LTV per user
             st.metric(label="Expected LTV Impact", value=f"${ltv_impact:.2f}", delta="Value Added", delta_color="normal")
             
-        st.markdown("### :material/smart_toy: AI Intervention Strategy (Generative Rationale)")
+        st.markdown("### AI Intervention Strategy (Generative Rationale)")
         if cate_result < -0.05:
             st.success("**Recommendation: HIGH PRIORITY INTERVENTION**\n\nThe causal model indicates this user profile is highly sensitive to retention strategies. The value-based model projects a positive LTV realization. **LLM Rationale:** *User exhibits strong baseline engagement but high churn risk; financial subsidies will directly offset cancellation intent. Execute targeted outreach.*")
         elif cate_result > 0.0:
@@ -110,7 +110,7 @@ else:
         col_chart1, col_chart2 = st.columns(2)
         
         with col_chart1:
-            st.markdown("#### :material/speed: Post-Intervention Risk Gauge")
+            st.markdown("#### Post-Intervention Risk Gauge")
             fig = go.Figure(go.Indicator(
                 mode = "gauge+number+delta",
                 value = counterfactual_prob * 100,
@@ -134,7 +134,7 @@ else:
             st.plotly_chart(fig, use_container_width=True, theme="streamlit")
 
         with col_chart2:
-            st.markdown("#### :material/show_chart: Effect Sensitivity Analysis")
+            st.markdown("#### Effect Sensitivity Analysis")
             st.markdown("This chart shows the actual treatment effect across different active day values.")
             
             with st.spinner("Calculating actual values..."):
@@ -155,7 +155,7 @@ else:
             st.plotly_chart(fig2, use_container_width=True, theme="streamlit")
 
     with tab2:
-        st.markdown("### :material/fact_check: Model Diagnostics")
+        st.markdown("### Model Diagnostics")
         st.markdown("These are the performance values for the Double Machine Learning model.")
         
         col_d1, col_d2 = st.columns(2)
@@ -182,7 +182,7 @@ else:
             st.table(metrics)
 
     with tab3:
-        st.markdown("### :material/account_tree: Structural Causal Model")
+        st.markdown("### Structural Causal Model")
         st.markdown("This graph shows the causal relationships between variables. Move your mouse over the nodes to see data.")
         
         G = nx.DiGraph()

@@ -6,19 +6,19 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-# Global state to maintain model across requests
+# Cache the loaded model in memory to prevent disk reads on every API request.
 ml_models = {}
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Load the trained causal model during startup
+    # Load the trained causal model during startup.
     model_path = "models/causal_model.pkl"
     if not os.path.exists(model_path):
         raise RuntimeError(f"Model file not found at {model_path}. Ensure Phase 2 is completed.")
     
     ml_models["causal_model"] = joblib.load(model_path)
     yield
-    # Clean up on shutdown
+    # Clean up state on shutdown.
     ml_models.clear()
 
 app = FastAPI(
@@ -28,7 +28,7 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Configure CORS middleware
+# Configure CORS middleware to permit frontend communication.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
