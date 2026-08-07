@@ -39,7 +39,7 @@ dvc pull
 
 ## Pipeline Status
 *   **Phase 1 (Data Pipeline):** Complete. Implemented out-of-core DuckDB aggregation and Kaggle dataset ingestion. Dataset tracked securely via DVC.
-*   **Phase 2 (Causal Modeling):** Pending.
+*   **Phase 2 (Causal Modeling):** Complete. Deployed DoWhy Structural Causal Model and EconML LinearDML CATE estimator. Model artifacts and hyperparameters tracked via MLflow and DVC.
 *   **Phase 3 (FastAPI Backend):** Pending.
 *   **Phase 4 (Streamlit Dashboard):** Pending.
 

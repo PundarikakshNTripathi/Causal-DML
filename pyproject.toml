@@ -16,6 +16,7 @@ dependencies = [
     "pandas>=2.3.3",
     "py7zr>=1.1.3",
     "pyarrow>=25.0.0",
+    "pytest>=9.1.1",
     "streamlit>=1.59.1",
     "uvicorn>=0.52.1",
 ]
